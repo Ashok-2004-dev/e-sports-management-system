@@ -1,0 +1,121 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html { scroll-behavior: smooth; } /* smooth scrolling for in-page jumps */
+  body { @apply bg-ink-950 text-slate-300 font-sans antialiased; }
+  h1, h2, h3, h4 { @apply font-display tracking-wide text-white; }
+  ::selection { background: rgba(34, 211, 238, .35); color: #fff; }
+  /* keyboard focus is always visible */
+  :focus-visible { outline: 2px solid #22d3ee; outline-offset: 2px; }
+  * { scrollbar-width: thin; scrollbar-color: #343b50 transparent; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-thumb { background: #2f3649; border-radius: 8px; }
+  ::-webkit-scrollbar-thumb:hover { background: #434c66; }
+}
+
+@layer components {
+  /* ---------- buttons ---------- */
+  .btn { @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed; }
+  .btn-primary { @apply btn bg-gradient-to-r from-brand to-violet-700 text-white shadow-lg shadow-brand/25 hover:-translate-y-0.5 hover:brightness-110 hover:shadow-[0_8px_26px_rgba(124,92,255,.45)] active:translate-y-0; }
+  .btn-ghost { @apply btn border border-white/10 bg-white/[0.03] text-slate-200 hover:border-cyan-400/50 hover:bg-white/[0.07] hover:text-white; }
+  .btn-danger { @apply btn bg-red-600/90 text-white hover:bg-red-600; }
+
+  /* NEW: "Back" button used on every sub-page (see components/BackButton.jsx). 40px tall = comfortable tap target */
+  .btn-back { @apply inline-flex min-h-[40px] items-center gap-2 rounded-md border border-ink-600 bg-ink-900/60 px-3.5 py-1.5 text-sm font-semibold text-slate-300 transition duration-200 hover:border-cyan-400/60 hover:text-white hover:shadow-[0_0_14px_rgba(34,211,238,.2)]; }
+
+  /* ---------- LIVE button + badge (NEW) ---------- */
+  /* Outlined crimson button so the pulsing red dot stays visible against it. Used in the navbar, hero and dashboards. */
+  .btn-live { @apply relative inline-flex shrink-0 items-center gap-2 rounded-md border border-live/60 bg-live/10 px-3 py-1.5 text-sm font-bold text-white transition duration-200 hover:-translate-y-0.5 hover:border-live hover:bg-live/20; box-shadow: 0 0 0 0 rgba(255, 46, 77, 0); }
+  .btn-live:hover { box-shadow: 0 0 24px rgba(255, 46, 77, .5); }
+  .btn-live-lg { @apply px-6 py-3 text-base; }
+  .live-badge { @apply inline-flex items-center gap-1.5 rounded border border-live/40 bg-live/15 px-2 py-0.5 font-game text-[11px] font-bold leading-4 text-live-soft; letter-spacing: .16em; }
+
+  /* ---------- panels ---------- */
+  /* HUD style card: dark glass panel with glowing corner accents */
+  .card { @apply relative rounded-2xl border border-white/[0.07] bg-ink-800/70 backdrop-blur-sm; box-shadow: 0 10px 30px -14px rgba(0, 0, 0, .6), inset 0 1px 0 rgba(255, 255, 255, .05); }
+  .card-neon { @apply card border-cyan-400/25; box-shadow: 0 0 0 1px rgba(34, 211, 238, .06), 0 0 50px -16px rgba(34, 211, 238, .3), 0 24px 50px -24px rgba(0, 0, 0, .8); }
+
+  /* NEW: hover glow + lift for match / tournament cards (cyan). .card-live is the crimson version for live matches. */
+  .card-hover { transition: transform .25s ease, border-color .25s ease, box-shadow .25s ease; }
+  .card-hover:hover { transform: translateY(-3px); border-color: rgba(34, 211, 238, .4); box-shadow: 0 0 0 1px rgba(34, 211, 238, .15), 0 16px 40px -14px rgba(34, 211, 238, .28), 0 8px 30px -12px rgba(0, 0, 0, .6); }
+  .card-live { border-color: rgba(255, 46, 77, .35); }
+  .card-live.card-hover:hover { border-color: rgba(255, 46, 77, .8); box-shadow: 0 0 0 1px rgba(255, 46, 77, .3), 0 12px 44px -10px rgba(255, 46, 77, .45), 0 8px 30px -12px rgba(0, 0, 0, .7); }
+  .card-selected { border-color: rgba(255, 46, 77, .9); box-shadow: 0 0 0 1px rgba(255, 46, 77, .4), 0 0 32px -6px rgba(255, 46, 77, .45); }
+
+  .input { @apply w-full rounded-lg border border-white/10 bg-ink-900/70 px-3.5 py-2.5 text-sm text-white placeholder-slate-500 transition focus:border-cyan-400 focus:outline-none focus:ring-4 focus:ring-cyan-400/10; }
+  .label { @apply mb-1.5 block text-xs font-semibold tracking-wide text-slate-400; }
+  .badge { @apply inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ring-1 ring-inset ring-white/10; }
+  .bg-grid { background-image: linear-gradient(rgba(34,211,238,.03) 1px, transparent 1px), linear-gradient(90deg, rgba(34,211,238,.03) 1px, transparent 1px); background-size: 44px 44px; }
+  .neon-text { background: linear-gradient(90deg, #22d3ee, #7c5cff 55%, #c084fc); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .hud-line { height: 2px; background: linear-gradient(90deg, transparent, #22d3ee, #7c5cff, transparent); }
+}
+
+/* ---------- LIVE pulsing dot (NEW) ----------
+   A solid red dot with a ring that expands and fades, like a recording light.
+   Markup: <span class="live-dot"></span> (see LiveButton.jsx and LiveBadge in ui.jsx). */
+.live-dot { position: relative; display: inline-block; flex-shrink: 0; width: .6rem; height: .6rem; border-radius: 9999px; background: #ff2e4d; box-shadow: 0 0 8px rgba(255, 46, 77, .9); }
+.live-dot::after { content: ''; position: absolute; inset: 0; border-radius: inherit; background: #ff2e4d; animation: liveRing 1.6s cubic-bezier(0, 0, .2, 1) infinite; }
+@keyframes liveRing { 0% { transform: scale(1); opacity: .75; } 100% { transform: scale(3.2); opacity: 0; } }
+
+/* ---------- card entrance (NEW) ----------
+   <Reveal> in ui.jsx adds .is-in the first time a card scrolls into view; --d staggers neighbours. */
+.reveal { opacity: 0; transform: translateY(14px); }
+.reveal.is-in { animation: cardIn .55s cubic-bezier(.2, .7, .2, 1) both; animation-delay: var(--d, 0ms); }
+@keyframes cardIn { 0% { opacity: 0; transform: translateY(14px) scale(.98); } 100% { opacity: 1; transform: none; } }
+
+/* ---------- page backdrop (see components/GameBackdrop.jsx) ---------- */
+.gb-scanlines { position: absolute; inset: 0; background: none; mix-blend-mode: overlay; }
+.gb-noise-vignette { position: absolute; inset: 0; background: radial-gradient(ellipse at center, transparent 40%, rgba(8,9,12,.8) 100%); }
+
+/* Accessibility: people who ask their device for less motion get no animation (content still appears) */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+  .live-dot::after { display: none; }
+}
+
+
+/* ---------- ESPORTS ARENA OPENING & GAME THEME ENHANCEMENTS ---------- */
+@keyframes bootScan {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+.boot-scanline {
+  animation: bootScan 2.2s linear infinite;
+}
+
+@keyframes marqueeScroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marqueeScroll 28s linear infinite;
+}
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+/* Angled esports HUD clip-path for hero buttons & badges */
+.hud-clip {
+  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+}
+
+/* Glowing cyber border accent on hover */
+.esports-frame {
+  position: relative;
+}
+.esports-frame::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(34,211,238,0.5), rgba(124,92,255,0.35), rgba(255,46,77,0.4));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
