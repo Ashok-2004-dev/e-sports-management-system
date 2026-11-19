@@ -11,6 +11,23 @@ const NOTIFICATIONS = `CREATE TABLE IF NOT EXISTS notifications (
   INDEX idx_user_feed (user_id, created_at),
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 )`;
+
+const REGISTRATION_OTPS = `CREATE TABLE IF NOT EXISTS registration_otps (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  email VARCHAR(120) NOT NULL,
+  password_hash VARCHAR(255) NOT NULL,
+  dzongkhag VARCHAR(50) NULL,
+  contact_no VARCHAR(20) NULL,
+  otp_hash VARCHAR(255) NOT NULL,
+  expires_at DATETIME NOT NULL,
+  attempts INT NOT NULL DEFAULT 0,
+  resend_count INT NOT NULL DEFAULT 0,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_registration_otp_email (email),
+  INDEX idx_registration_otp_expiry (expires_at)
+)`;
+
 const PASSWORD_RESETS = `CREATE TABLE IF NOT EXISTS password_resets (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT NOT NULL,
@@ -40,6 +57,9 @@ module.exports = async function migrate(db) {
   }
 
   await db.query(PASSWORD_RESETS);
+  await db.query(REGISTRATION_OTPS);
+  const [otpCols] = await db.query("SELECT COLUMN_NAME AS c FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='registration_otps'");
+  if (otpCols.length && !otpCols.some((x) => x.c === 'resend_count')) await db.query('ALTER TABLE registration_otps ADD COLUMN resend_count INT NOT NULL DEFAULT 0');
   // LIVE GAMES: add the live-match columns to an older database
   const [mc] = await db.query("SELECT COLUMN_NAME AS c FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='matches'");
   for (const [c, def] of LIVE_COLUMNS) {
