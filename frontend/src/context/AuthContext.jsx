@@ -21,8 +21,9 @@ export function AuthProvider({ children }) {
     saveSession(data.token, data.user); setUser(data.user);
     return data.user;
   };
-  const register = async (form) => {
-    const data = await api.post('/auth/register', form);
+  const register = async (form) => api.post('/auth/register', form);
+  const verifyRegistration = async (email, code) => {
+    const data = await api.post('/auth/verify-registration', { email, code });
     saveSession(data.token, data.user); setUser(data.user);
     return data.user;
   };
@@ -32,5 +33,5 @@ export function AuthProvider({ children }) {
     return data.user;
   };
 
-  return <AuthContext.Provider value={{ user, login, register, socialLogin, logout }}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{ user, login, register, verifyRegistration, socialLogin, logout }}>{children}</AuthContext.Provider>;
 }

@@ -12,29 +12,116 @@ const emailOk = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e || '');
 const phoneOk = (p) => /^(?:\+?975)?(?:17|77)\d{6}$|^\+?[0-9]{7,15}$/.test(String(p || '').replace(/[\s-]/g, ''));
 const sign = (u) => jwt.sign({ id: u.id, role: u.role }, process.env.JWT_SECRET, { expiresIn: '8h' });
 
+// ---- Email OTP registration (new local accounts) ----
+const REG_OTP_MINUTES = 5;
+const REG_MAX_ATTEMPTS = 5;
+
 router.post('/register', wrap(async (req, res) => {
   const { name, email, password, dzongkhag, contact_no } = req.body;
   const cleanedPhone = String(contact_no || '').replace(/[\s-]/g, '');
+  const cleanEmail = String(email || '').trim().toLowerCase();
   need(name && name.trim().length >= 2, 'Name must be at least 2 characters.');
-  need(emailOk(email), 'Enter a valid email address.');
+  need(emailOk(cleanEmail), 'Enter a valid email address.');
   need(password && password.length >= 6, 'Password must be at least 6 characters.');
   need(phoneOk(cleanedPhone), 'Enter a valid phone number (e.g., 17XXXXXX or 77XXXXXX).');
 
-  const hash = await bcrypt.hash(password, 10);
+  const [existing] = await db.query('SELECT id FROM users WHERE email=?', [cleanEmail]);
+  need(!existing.length, 'An account with this email already exists. Please log in.');
+
+  const [[recent]] = await db.query(
+    'SELECT COUNT(*) AS n FROM registration_otps WHERE email=? AND created_at > (NOW() - INTERVAL 1 MINUTE)',
+    [cleanEmail]
+  );
+  need(Number(recent.n) < 3, 'Please wait a minute before requesting another code.');
+
+  const code = String(crypto.randomInt(0, 1000000)).padStart(6, '0');
+  const passwordHash = await bcrypt.hash(password, 10);
+  await db.query('DELETE FROM registration_otps WHERE email=?', [cleanEmail]);
+  await db.query(
+    `INSERT INTO registration_otps
+      (name, email, password_hash, dzongkhag, contact_no, otp_hash, expires_at)
+     VALUES (?, ?, ?, ?, ?, ?, NOW() + INTERVAL 5 MINUTE)`,
+    [name.trim(), cleanEmail, passwordHash, dzongkhag || null, cleanedPhone, await bcrypt.hash(code, 10)]
+  );
+
+  await sendMail(
+    cleanEmail,
+    'Verify your E-Sports Management System account',
+    `Hello ${name.trim()},\n\nYour email verification code is: ${code}\n\nThis code expires in ${REG_OTP_MINUTES} minutes. If you did not create this account, ignore this email.`
+  );
+
+  const response = { message: 'A verification code has been sent to your email. Enter it to complete registration.', email: cleanEmail };
+  // Local development fallback: sendMail prints the code in the backend terminal.
+  // Do not expose this value when SMTP is configured.
+  if (!process.env.SMTP_HOST) response.devCode = code;
+  res.status(200).json(response);
+}));
+
+router.post('/verify-registration', wrap(async (req, res) => {
+  const email = String(req.body.email || '').trim().toLowerCase();
+  const code = String(req.body.code || '').trim();
+  need(emailOk(email), 'Enter a valid email address.');
+  need(/^\d{6}$/.test(code), 'Enter the six-digit verification code.');
+
+  const [pendingRows] = await db.query(
+    'SELECT * FROM registration_otps WHERE email=? AND expires_at > NOW() ORDER BY id DESC LIMIT 1',
+    [email]
+  );
+  const pending = pendingRows[0];
+  if (!pending || pending.attempts >= REG_MAX_ATTEMPTS) {
+    return res.status(400).json({ message: 'The code has expired or too many attempts were made. Request a new code.' });
+  }
+  if (!(await bcrypt.compare(code, pending.otp_hash))) {
+    await db.query('UPDATE registration_otps SET attempts=attempts+1 WHERE id=?', [pending.id]);
+    return res.status(400).json({ message: 'Incorrect verification code. Please try again.' });
+  }
+
   const conn = await db.getConnection();
   try {
     await conn.beginTransaction();
-    const [u] = await conn.query('INSERT INTO users (name,email,password_hash,role) VALUES (?,?,?,"player")',
-      [name.trim(), email.trim().toLowerCase(), hash]);
+    const [existing] = await conn.query('SELECT id FROM users WHERE email=? FOR UPDATE', [email]);
+    if (existing.length) {
+      await conn.query('DELETE FROM registration_otps WHERE email=?', [email]);
+      await conn.commit();
+      return res.status(409).json({ message: 'An account with this email already exists. Please log in.' });
+    }
+    const [inserted] = await conn.query(
+      'INSERT INTO users (name,email,password_hash,role) VALUES (?,?,?,"player")',
+      [pending.name, pending.email, pending.password_hash]
+    );
     await conn.query('INSERT INTO players (user_id,dzongkhag,contact_no) VALUES (?,?,?)',
-      [u.insertId, dzongkhag || null, cleanedPhone]);
+      [inserted.insertId, pending.dzongkhag, pending.contact_no]);
+    await conn.query('DELETE FROM registration_otps WHERE email=?', [email]);
     await conn.commit();
-    const user = { id: u.insertId, name: name.trim(), email: email.trim().toLowerCase(), role: 'player' };
-    notify.toAdmins({ type: 'player', title: 'New player registered', message: `${user.name} (${user.email}) created a player account.`, link: '/admin/players' });
-    notify.toUser(u.insertId, { type: 'account', title: 'Welcome to E-Sports MS', message: 'Your account is ready. Join a team and register for a tournament to get started.', link: '/player/tournaments' });
-    res.status(201).json({ token: sign(user), user });
-  } catch (e) { await conn.rollback(); throw e; }
-  finally { conn.release(); }
+
+    const user = { id: inserted.insertId, name: pending.name, email: pending.email, role: 'player' };
+    notify.toAdmins({ type: 'player', title: 'New player registered', message: `${user.name} (${user.email}) created a verified player account.`, link: '/admin/players' });
+    notify.toUser(user.id, { type: 'account', title: 'Welcome to E-Sports MS', message: 'Your email is verified and your account is ready. Join a team and register for a tournament to get started.', link: '/player/tournaments' });
+    res.status(201).json({ token: sign(user), user, message: 'Email verified. Your account has been created.' });
+  } catch (e) {
+    await conn.rollback();
+    throw e;
+  } finally {
+    conn.release();
+  }
+}));
+
+router.post('/resend-registration-otp', wrap(async (req, res) => {
+  const email = String(req.body.email || '').trim().toLowerCase();
+  need(emailOk(email), 'Enter a valid email address.');
+  const [rows] = await db.query('SELECT * FROM registration_otps WHERE email=? ORDER BY id DESC LIMIT 1', [email]);
+  const pending = rows[0];
+  need(pending, 'No pending registration found. Please register again.');
+  need(Number(pending.resend_count || 0) < 3, 'You have reached the resend limit. Please register again later.');
+  need(new Date(pending.created_at).getTime() < Date.now() - 30000, 'Please wait 30 seconds before requesting another code.');
+  const code = String(crypto.randomInt(0, 1000000)).padStart(6, '0');
+  await db.query('UPDATE registration_otps SET otp_hash=?, expires_at=NOW() + INTERVAL 5 MINUTE, attempts=0, resend_count=resend_count+1, created_at=CURRENT_TIMESTAMP WHERE id=?',
+    [await bcrypt.hash(code, 10), pending.id]);
+  await sendMail(email, 'Your new E-Sports MS verification code',
+    `Hello ${pending.name},\n\nYour new verification code is: ${code}\n\nIt expires in ${REG_OTP_MINUTES} minutes.`);
+  const response = { message: 'A new verification code has been sent.' };
+  if (!process.env.SMTP_HOST) response.devCode = code;
+  res.json(response);
 }));
 
 // ---- Social OAuth Login / Sign-up (Google / Gmail & Facebook) ----
