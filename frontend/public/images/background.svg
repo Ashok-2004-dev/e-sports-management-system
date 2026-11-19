@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0a1226"/><stop offset=".55" stop-color="#150d33"/><stop offset="1" stop-color="#2a0d2e"/></linearGradient>
+    <radialGradient id="c" cx=".25" cy=".2" r=".5"><stop offset="0" stop-color="#22d3ee" stop-opacity=".45"/><stop offset="1" stop-color="#22d3ee" stop-opacity="0"/></radialGradient>
+    <radialGradient id="v" cx=".8" cy=".35" r=".5"><stop offset="0" stop-color="#7c5cff" stop-opacity=".5"/><stop offset="1" stop-color="#7c5cff" stop-opacity="0"/></radialGradient>
+    <radialGradient id="r" cx=".55" cy="1" r=".5"><stop offset="0" stop-color="#ff2e4d" stop-opacity=".35"/><stop offset="1" stop-color="#ff2e4d" stop-opacity="0"/></radialGradient>
+    <pattern id="hex" width="84" height="97" patternUnits="userSpaceOnUse" patternTransform="scale(1.2)">
+      <path d="M42 2 80 24v44L42 90 4 68V24z M42 90v14 M80 68l12 7 M4 68l-12 7" fill="none" stroke="#22d3ee" stroke-opacity=".14" stroke-width="1.2"/>
+    </pattern>
+    <linearGradient id="beam" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#22d3ee" stop-opacity=".0"/><stop offset=".5" stop-color="#22d3ee" stop-opacity=".16"/><stop offset="1" stop-color="#22d3ee" stop-opacity="0"/></linearGradient>
+  </defs>
+  <rect width="1920" height="1080" fill="url(#sky)"/>
+  <rect width="1920" height="1080" fill="url(#hex)"/>
+  <rect width="1920" height="1080" fill="url(#c)"/><rect width="1920" height="1080" fill="url(#v)"/><rect width="1920" height="1080" fill="url(#r)"/>
+  <g transform="skewX(-18)" opacity=".9">
+    <rect x="520" y="0" width="70" height="1080" fill="url(#beam)"/><rect x="900" y="0" width="30" height="1080" fill="url(#beam)"/><rect x="1380" y="0" width="110" height="1080" fill="url(#beam)"/>
+  </g>
+  <g fill="none" stroke-width="2">
+    <circle cx="1500" cy="330" r="230" stroke="#7c5cff" stroke-opacity=".28"/><circle cx="1500" cy="330" r="165" stroke="#22d3ee" stroke-opacity=".25" stroke-dasharray="10 14"/><circle cx="1500" cy="330" r="95" stroke="#ff2e4d" stroke-opacity=".3"/>
+    <path d="M1500 80v500M1250 330h500" stroke="#22d3ee" stroke-opacity=".15"/>
+    <path d="M120 900 360 760l240 140 240-140" stroke="#22d3ee" stroke-opacity=".22"/><path d="M120 960 360 820l240 140 240-140" stroke="#7c5cff" stroke-opacity=".22"/>
+  </g>
+  <g fill="#22d3ee" fill-opacity=".5"><circle cx="300" cy="200" r="3"/><circle cx="760" cy="140" r="2"/><circle cx="1100" cy="260" r="3"/><circle cx="1700" cy="760" r="3"/><circle cx="980" cy="880" r="2"/><circle cx="220" cy="520" r="2"/></g>
+</svg>
