@@ -2,5 +2,12 @@ node_modules/
 .env
 .env.*
 !.env.example
+dist/
+*.log
+
+# Runtime uploads: keep the seed artwork, ignore user-uploaded files.
 backend/uploads/*
 !backend/uploads/.gitkeep
+!backend/uploads/seed/
+backend/uploads/seed/*
+!backend/uploads/seed/*.svg
