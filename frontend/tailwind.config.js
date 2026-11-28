@@ -1,18 +1,25 @@
+// a colour that reads a CSS variable, so the dark / light theme can change it (see src/index.css)
+const v = (name) => `rgb(var(--${name}) / <alpha-value>)`;
+
 export default {
   content: ['./index.html', './src/**/*.{js,jsx}'],
   theme: {
     extend: {
       colors: {
         // ESPORTS THEME: neutral charcoal base instead of the old navy. Every page uses these tokens, so the whole site re-themes from here.
-        ink: { 950: '#08090c', 900: '#0d0f14', 800: '#12151c', 700: '#1a1e28', 600: '#272c3a' },
+        ink: { 950: v('ink-950'), 900: v('ink-900'), 800: v('ink-800'), 700: v('ink-700'), 600: v('ink-600') },
+        fg: v('fg'), // main text: white in dark mode, near-black in light mode
+        slate: { 200: v('slate-200'), 300: v('slate-300'), 400: v('slate-400'), 500: v('slate-500'), 600: v('slate-600') },
         brand: { DEFAULT: '#7c5cff', 400: '#a28bff' }, // electric violet: primary buttons, active tabs
         neon: { cyan: '#22d3ee', pink: '#f43f5e', lime: '#a3e635' }, // cyan is the interaction accent (hover glow, focus, links)
         live: { DEFAULT: '#ff2e4d', soft: '#ff6b81' }, // crimson is reserved for LIVE indicators only
       },
+      // exactly two font families: Rajdhani for headings, Inter for everything else
       fontFamily: {
-        display: ['Rajdhani', 'Segoe UI', 'sans-serif'], // scores, numbers, card titles
-        game: ['"Chakra Petch"', 'Rajdhani', 'Segoe UI', 'sans-serif'], // angular, futuristic headings (replaces Orbitron)
-        sans: ['Inter', 'Segoe UI', 'sans-serif'],
+        display: ['Rajdhani', 'sans-serif'],
+        game: ['Rajdhani', 'sans-serif'],
+        sans: ['Inter', 'sans-serif'],
+        mono: ['Inter', 'sans-serif'],
       },
       keyframes: {
         fadeUp: { '0%': { opacity: 0, transform: 'translateY(12px)' }, '100%': { opacity: 1, transform: 'none' } },

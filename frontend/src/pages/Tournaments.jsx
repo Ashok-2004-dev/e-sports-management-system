@@ -5,9 +5,11 @@ import useFetch from '../hooks/useFetch';
 import { Async, PageHeader } from '../components/ui';
 import { TournamentCard } from '../components/Cards';
 import useBase from '../hooks/useBase';
+import useMyPlayer from '../hooks/useMyPlayer';
 
 export default function Tournaments() {
   const base = useBase();
+  const me = useMyPlayer();
   const [params] = useSearchParams();
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
@@ -28,7 +30,7 @@ export default function Tournaments() {
           <option value="">All games</option>{(games.data || []).map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
         </select>
       </div>
-      <Async state={list} empty="No tournaments match your search.">{(d) => <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{d.map((t, i) => <TournamentCard key={t.id} index={i} t={t} base={base} />)}</div>}</Async>
+      <Async state={list} empty="No tournaments match your search.">{(d) => <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{d.map((t, i) => <TournamentCard key={t.id} index={i} t={t} base={base} registration={me.registrationFor(t.id)?.status} />)}</div>}</Async>
     </div>
   );
 }

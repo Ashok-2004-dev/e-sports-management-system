@@ -25,7 +25,7 @@ export function ToastProvider({ children }) {
         {items.map((i) => {
           const [cls, Icon] = look[i.type];
           return (
-            <div key={i.id} className={`animate-fadeUp flex items-start gap-2 rounded-lg border p-3 text-sm shadow-xl ${cls}`}>
+            <div key={i.id} className={`toast animate-fadeUp flex items-start gap-2 rounded-lg border p-3 text-sm shadow-xl ${cls}`}>
               <Icon size={18} className="mt-0.5 shrink-0" />
               <span>{i.text}</span>
             </div>

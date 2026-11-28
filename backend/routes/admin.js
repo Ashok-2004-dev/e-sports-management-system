@@ -30,6 +30,12 @@ router.get('/stats', wrap(async (req, res) => {
 
 // ---- games ----
 const CATEGORIES = ['battle-royale', 'moba', 'shooter', 'sports', 'strategy', 'racing', 'fighting', 'other'];
+// players per team: whole number from 1 to 20
+const teamSize = (v) => {
+  const n = Number(v === undefined || v === '' ? 5 : v);
+  need(Number.isInteger(n) && n >= 1 && n <= 20, 'Players per team must be a number from 1 to 20.');
+  return n;
+};
 router.get('/games', wrap(async (req, res) => {
   const [rows] = await db.query(`SELECT g.*, (SELECT COUNT(*) FROM tournaments t WHERE t.game_id=g.id) AS tournaments FROM games g WHERE g.name LIKE ? ORDER BY g.name`, [like(req.query.search)]);
   res.json(rows);
@@ -38,7 +44,8 @@ router.post('/games', wrap(async (req, res) => {
   const { name, category, description, image_url } = req.body;
   need(name && name.trim().length >= 2, 'Game name must be at least 2 characters.');
   need(CATEGORIES.includes(category), 'Choose a category.');
-  await db.query('INSERT INTO games (name,category,description,image_url) VALUES (?,?,?,?)', [name.trim(), category, nn(description), img(image_url)]);
+  const size = teamSize(req.body.team_size);
+  await db.query('INSERT INTO games (name,category,description,image_url,team_size) VALUES (?,?,?,?,?)', [name.trim(), category, nn(description), img(image_url), size]);
   notify.toPlayers({ type: 'game', title: 'New game added', message: `${name.trim()} is now available on the platform.`, link: '/player/games' });
   notify.toAdmins({ type: 'game', title: 'Game added', message: `You added the game ${name.trim()}.`, link: '/admin/games' });
   res.status(201).json({ message: 'Game added.' });
@@ -47,7 +54,8 @@ router.put('/games/:id', wrap(async (req, res) => {
   const { name, category, description, image_url } = req.body;
   need(name && name.trim().length >= 2, 'Game name must be at least 2 characters.');
   need(CATEGORIES.includes(category), 'Choose a category.');
-  const [r] = await db.query('UPDATE games SET name=?,category=?,description=?,image_url=? WHERE id=?', [name.trim(), category, nn(description), img(image_url), req.params.id]);
+  const size = teamSize(req.body.team_size);
+  const [r] = await db.query('UPDATE games SET name=?,category=?,description=?,image_url=?,team_size=? WHERE id=?', [name.trim(), category, nn(description), img(image_url), size, req.params.id]);
   gone(r, 'Game');
   notify.toPlayers({ type: 'game', title: 'Game updated', message: `Details of ${name.trim()} were updated.`, link: '/player/games' });
   notify.toAdmins({ type: 'game', title: 'Game updated', message: `You updated the game ${name.trim()}.`, link: '/admin/games' });
@@ -91,7 +99,7 @@ router.get('/teams', wrap(async (req, res) => {
 router.post('/teams', wrap(async (req, res) => {
   const { name, region, coach_name, logo_url } = req.body;
   need(name && name.trim().length >= 3, 'Team name must be at least 3 characters.');
-  await db.query('INSERT INTO teams (name,region,coach_name,logo_url) VALUES (?,?,?,?)', [name.trim(), nn(region), nn(coach_name), img(logo_url)]);
+  await db.query('INSERT INTO teams (name,region,coach_name,logo_url,game_id) VALUES (?,?,?,?,?)', [name.trim(), nn(region), nn(coach_name), img(logo_url), nn(req.body.game_id)]);
   notify.toPlayers({ type: 'team', title: 'New team created', message: `Team ${name.trim()} is open for join requests.`, link: '/player/teams' });
   notify.toAdmins({ type: 'team', title: 'Team created', message: `You created the team ${name.trim()}.`, link: '/admin/teams' });
   res.status(201).json({ message: 'Team created.' });
@@ -99,7 +107,13 @@ router.post('/teams', wrap(async (req, res) => {
 router.put('/teams/:id', wrap(async (req, res) => {
   const { name, region, coach_name, logo_url } = req.body;
   need(name && name.trim().length >= 3, 'Team name must be at least 3 characters.');
-  const [r] = await db.query('UPDATE teams SET name=?,region=?,coach_name=?,logo_url=? WHERE id=?', [name.trim(), nn(region), nn(coach_name), img(logo_url), req.params.id]);
+  if (req.body.game_id) {
+    const [[g]] = await db.query('SELECT name, team_size FROM games WHERE id=?', [req.body.game_id]);
+    need(g, 'Game not found.');
+    const [[c]] = await db.query("SELECT COUNT(*) AS n FROM team_members WHERE team_id=? AND status='approved'", [req.params.id]);
+    need(Number(c.n) <= g.team_size, `${g.name} allows only ${g.team_size} player(s), but this team has ${c.n}.`);
+  }
+  const [r] = await db.query('UPDATE teams SET name=?,region=?,coach_name=?,logo_url=?,game_id=? WHERE id=?', [name.trim(), nn(region), nn(coach_name), img(logo_url), nn(req.body.game_id), req.params.id]);
   gone(r, 'Team');
   notify.toTeams([req.params.id], { type: 'team', title: 'Team updated', message: `The administrator updated your team ${name.trim()}.`, link: '/player/team' });
   notify.toAdmins({ type: 'team', title: 'Team updated', message: `You updated the team ${name.trim()}.`, link: '/admin/teams' });
@@ -228,12 +242,15 @@ router.delete('/matches/:id', wrap(async (req, res) => {
 router.put('/matches/:id/live', wrap(async (req, res) => {
   const s1 = parseInt(req.body.score1, 10), s2 = parseInt(req.body.score2, 10);
   need(Number.isInteger(s1) && Number.isInteger(s2) && s1 >= 0 && s2 >= 0, 'Enter valid live scores (0 or more).');
-  const [[m]] = await db.query('SELECT m.team1_id, m.team2_id, m.is_live, r.match_id AS done FROM matches m LEFT JOIN results r ON r.match_id=m.id WHERE m.id=?', [req.params.id]);
+  const [[m]] = await db.query('SELECT m.team1_id, m.team2_id, m.is_live, m.stream_url, r.match_id AS done FROM matches m LEFT JOIN results r ON r.match_id=m.id WHERE m.id=?', [req.params.id]);
   if (!m) throw new HttpError(404, 'Match not found.');
   need(!m.done, 'This match already has a published result. Edit the result instead.');
   const live = req.body.is_live ? 1 : 0;
-  await db.query('UPDATE matches SET is_live=?, live_score1=?, live_score2=? WHERE id=?', [live, s1, s2, req.params.id]);
-  if (live && !m.is_live) { // only announce the moment a match goes live, not every score change
+  const url = String(req.body.stream_url ?? m.stream_url ?? '').trim();
+  need(!url || (url.length <= 500 && /^https?:\/\/\S+$/i.test(url)), 'The stream link must start with http:// or https://');
+  need(!live || url, 'Paste the stream link to go live.');
+  await db.query('UPDATE matches SET is_live=?, live_score1=?, live_score2=?, stream_url=? WHERE id=?', [live, s1, s2, url || null, req.params.id]);
+  if (live && !(m.is_live && m.stream_url)) { // only announce the moment a match goes live, not every score change
     const label = await matchLabel(m.team1_id, m.team2_id);
     notify.toTeams([m.team1_id, m.team2_id], { type: 'match', title: 'Your match is LIVE', message: `${label} is being played now.`, link: `/live/${req.params.id}` });
   }

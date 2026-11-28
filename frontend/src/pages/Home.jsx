@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, Trophy, Users, UserPlus, Medal, Swords, ClipboardCheck, Radio, Flame, Crosshair } from 'lucide-react';
+import { ArrowRight, Trophy, Users, UserPlus, Medal, Swords, ClipboardCheck, Flame } from 'lucide-react';
 import useFetch from '../hooks/useFetch';
 import { Async, LiveBadge, Thumb } from '../components/ui';
 import { TournamentCard, MatchRow, LiveMatchCard, LiveMiniRow } from '../components/Cards';
@@ -17,7 +17,7 @@ const Section = ({ title, subtitle, to, children }) => (
         <div className="hud-line mt-2 w-28" />
         {subtitle && <p className="mt-1 text-sm text-slate-400">{subtitle}</p>}
       </div>
-      {to && <Link to={to} className="flex shrink-0 items-center gap-1 text-sm font-semibold text-brand-400 hover:text-white">View all <ArrowRight size={14} /></Link>}
+      {to && <Link to={to} className="flex shrink-0 items-center gap-1 text-sm font-semibold text-brand-400 hover:text-fg">View all <ArrowRight size={14} /></Link>}
     </div>
     {children}
   </section>
@@ -26,15 +26,16 @@ const Section = ({ title, subtitle, to, children }) => (
 function HeroLivePanel({ next }) {
   const { matches } = useLive();
   const list = matches.slice(0, 3);
+  if (!list.length && !next) return null;
   return (
     <aside className="card esports-frame animate-panelIn border-cyan-400/50 p-5" aria-label="Live matches">
       <div className="mb-4 flex items-center justify-between gap-3">
-        {list.length ? <LiveBadge label="LIVE BROADCAST" /> : <span className="inline-flex items-center gap-2 font-game text-xs font-bold tracking-widest text-slate-400"><Radio size={14} className="text-cyan-300" /> ARENA FEED READY</span>}
-        <Link to="/live" className="flex items-center gap-1 text-xs font-semibold text-slate-300 hover:text-white">Live Centre <ArrowRight size={13} /></Link>
+        {list.length ? <LiveBadge label="LIVE BROADCAST" /> : <span className="font-game text-xs font-bold tracking-widest text-slate-400">COMING UP</span>}
+        {list.length > 0 && <Link to="/live" className="flex items-center gap-1 text-xs font-semibold text-slate-300 hover:text-fg">Live Centre <ArrowRight size={13} /></Link>}
       </div>
       {list.length ? (
         <div className="space-y-3">{list.map((m) => <LiveMiniRow key={m.id} m={m} />)}</div>
-      ) : next ? (
+      ) : (
         <div className="rounded-lg border border-ink-600 bg-ink-900/80 p-4">
           <div className="mb-3 flex items-center justify-between text-xs">
             <span className="font-game uppercase tracking-wider text-slate-400">Next Featured Match</span>
@@ -42,22 +43,16 @@ function HeroLivePanel({ next }) {
           </div>
           <div className="flex items-center gap-2">
             <span className="flex min-w-0 flex-1 items-center justify-end gap-2 text-right">
-              <span className="truncate text-sm font-semibold text-white">{next.team1}</span>
+              <span className="truncate text-sm font-semibold text-fg">{next.team1}</span>
               <Thumb src={next.team1_logo} name={next.team1} size={30} />
             </span>
             <span className="rounded bg-ink-800 px-2.5 py-1 font-display text-base font-bold text-cyan-300">VS</span>
             <span className="flex min-w-0 flex-1 items-center gap-2">
               <Thumb src={next.team2_logo} name={next.team2} size={30} />
-              <span className="truncate text-sm font-semibold text-white">{next.team2}</span>
+              <span className="truncate text-sm font-semibold text-fg">{next.team2}</span>
             </span>
           </div>
           <p className="mt-3 text-center text-xs text-slate-400">{fmtDateTime(next.match_date)}</p>
-        </div>
-      ) : (
-        <div className="rounded-lg border border-dashed border-ink-600 bg-ink-900/50 p-5 text-center">
-          <Crosshair className="mx-auto mb-2 text-cyan-300" size={24} />
-          <p className="text-sm font-medium text-slate-300">Standby for live broadcasts</p>
-          <p className="mt-1 text-xs text-slate-500">Live scores and TikTok/YouTube streams appear here automatically.</p>
         </div>
       )}
     </aside>
@@ -79,7 +74,7 @@ export default function Home() {
   return (
     <div>
       {/* ESPORTS BROADCAST TICKER BAR */}
-      <div className="overflow-hidden border-b border-white/[0.07] bg-ink-900/90 py-2 backdrop-blur-md">
+      <div className="overflow-hidden border-b border-fg/[0.07] bg-ink-900/90 py-2 backdrop-blur-md">
         <div className="animate-marquee flex items-center gap-8 font-game text-xs uppercase tracking-widest text-slate-300">
           {[0, 1].map((dup) => (
             <div key={dup} className="flex items-center gap-8">
@@ -98,7 +93,7 @@ export default function Home() {
 
       {/* HERO: Cinematic Esports Opening */}
       <section className="relative overflow-hidden border-b border-ink-600">
-        <img src="/images/hero.svg" alt="" className="absolute inset-0 h-full w-full object-cover opacity-75 transition-transform duration-1000 scale-105" />
+        <img src="/images/hero.svg" alt="" className="hero-art absolute inset-0 h-full w-full object-cover opacity-75 transition-transform duration-1000 scale-105" />
         <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 via-brand/20 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-r from-ink-950 via-ink-950/85 to-ink-950/35" />
 
@@ -136,8 +131,8 @@ export default function Home() {
                 ['Tournaments', s?.tournaments],
                 ['Matches', s?.matches],
               ].map(([l, v]) => (
-                <div key={l} className="group rounded-xl border border-white/10 bg-ink-900/75 p-3.5 backdrop-blur transition hover:border-cyan-400/50">
-                  <p className="font-display text-3xl font-bold text-white transition group-hover:text-cyan-300">{v ?? '-'}</p>
+                <div key={l} className="group rounded-xl border border-fg/10 bg-ink-900/75 p-3.5 backdrop-blur transition hover:border-cyan-400/50">
+                  <p className="font-display text-3xl font-bold text-fg transition group-hover:text-cyan-300">{v ?? '-'}</p>
                   <p className="font-game text-[11px] font-semibold uppercase tracking-widest text-slate-400">{l}</p>
                 </div>
               ))}
@@ -165,7 +160,7 @@ export default function Home() {
                 <div className="absolute inset-0 bg-gradient-to-t from-ink-950 via-ink-950/30 to-transparent" />
                 <div className="absolute inset-x-3 bottom-3">
                   <p className="text-[10px] font-bold uppercase tracking-widest text-cyan-300">{categoryLabel(g.category)}</p>
-                  <p className="font-display text-xl font-bold leading-tight text-white">{g.name}</p>
+                  <p className="font-display text-xl font-bold leading-tight text-fg">{g.name}</p>
                   <p className="text-xs text-slate-300">{g.tournaments} tournament{g.tournaments === 1 ? '' : 's'}</p>
                 </div>
               </Link>
@@ -184,7 +179,7 @@ export default function Home() {
                 <img src={coverFor(c.value)} alt={c.label} className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-110" />
                 <div className="absolute inset-0 bg-gradient-to-t from-ink-950 via-ink-950/40 to-transparent" />
                 <div className="absolute bottom-3 left-4 right-4">
-                  <p className="flex items-center gap-2 font-display text-xl font-bold uppercase text-white"><c.icon size={18} className="text-brand-400" /> {c.label}</p>
+                  <p className="flex items-center gap-2 font-display text-xl font-bold uppercase text-fg"><c.icon size={18} className="text-brand-400" /> {c.label}</p>
                   <p className="text-xs text-slate-300">{n === null ? ' ' : n === 0 ? 'No games yet' : `${n} game${n > 1 ? 's' : ''}`}</p>
                 </div>
               </Link>

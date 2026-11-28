@@ -65,6 +65,18 @@ module.exports = async function migrate(db) {
   for (const [c, def] of LIVE_COLUMNS) {
     if (mc.length && !mc.some((x) => x.c === c)) { await db.query(`ALTER TABLE matches ADD COLUMN \`${c}\` ${def}`); console.log(`Database upgraded: matches.${c} added.`); }
   }
+  // TEAM SIZE: each game has a player limit, and each team belongs to one game
+  const has = async (t, c) => (await db.query('SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=? AND COLUMN_NAME=?', [t, c]))[0].length > 0;
+  if (mc.length && !(await has('games', 'team_size'))) {
+    await db.query('ALTER TABLE games ADD COLUMN team_size INT NOT NULL DEFAULT 5');
+    await db.query("UPDATE games SET team_size=4 WHERE name LIKE '%pubg%' OR name LIKE '%free fire%'");
+    await db.query("UPDATE games SET team_size=1 WHERE name LIKE '%efootball%'");
+    console.log('Database upgraded: games.team_size added.');
+  }
+  if (mc.length && !(await has('teams', 'game_id'))) {
+    await db.query('ALTER TABLE teams ADD COLUMN game_id INT NULL, ADD CONSTRAINT fk_teams_game FOREIGN KEY (game_id) REFERENCES games(id) ON DELETE SET NULL');
+    console.log('Database upgraded: teams.game_id added. Choose a game for each existing team.');
+  }
   const [g] = await db.query("SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='players' AND COLUMN_NAME='gamertag'");
   if (g.length) { await db.query('ALTER TABLE players DROP COLUMN gamertag'); console.log('Database upgraded: the gamertag column was removed.'); }
   const [cols] = await db.query("SELECT TABLE_NAME AS t, COLUMN_NAME AS c, CHARACTER_MAXIMUM_LENGTH AS n FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME IN ('players','games','teams','tournaments')");

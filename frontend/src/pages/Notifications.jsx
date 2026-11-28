@@ -13,7 +13,7 @@ export default function Notifications() {
   const nav = useNavigate();
   if (!loaded) return <Loading />;
   const list = tab === 'unread' ? items.filter((n) => !n.is_read) : items;
-  const pill = (on) => `rounded-md px-4 py-2 text-sm font-semibold transition ${on ? 'bg-gradient-to-r from-brand to-violet-600 text-white' : 'text-slate-400 hover:text-white'}`;
+  const pill = (on) => `rounded-md px-4 py-2 text-sm font-semibold transition ${on ? 'bg-gradient-to-r from-brand to-violet-600 text-white' : 'text-slate-400 hover:text-fg'}`;
 
   return (
     <div>
@@ -35,7 +35,7 @@ export default function Notifications() {
               <div key={n.id} className={`flex items-start gap-4 p-4 transition hover:bg-ink-700/40 ${n.is_read ? '' : 'bg-cyan-500/5'}`}>
                 <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${k.cls}`}><k.icon size={20} /></span>
                 <button className="min-w-0 flex-1 text-left" onClick={() => { markRead(n.id); if (n.link) nav(n.link); }}>
-                  <p className={`flex items-center gap-2 ${n.is_read ? 'font-medium text-slate-300' : 'font-bold text-white'}`}>{n.title}{!n.is_read && <span className="h-2 w-2 rounded-full bg-cyan-400" />}</p>
+                  <p className={`flex items-center gap-2 ${n.is_read ? 'font-medium text-slate-300' : 'font-bold text-fg'}`}>{n.title}{!n.is_read && <span className="h-2 w-2 rounded-full bg-cyan-400" />}</p>
                   <p className="text-sm text-slate-400">{n.message}</p>
                   <p className="mt-1 text-xs text-slate-500">{timeAgo(n.created_at)} - {fmtDateTime(n.created_at)}</p>
                 </button>

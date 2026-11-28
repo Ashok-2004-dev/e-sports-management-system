@@ -37,7 +37,7 @@ export default function AdminMatches() {
     { key: 'winner', label: 'Winner', render: (r) => r.winner || '-' }, { key: 'status', label: 'Status', render: (r) => <StatusBadge status={r.status} /> },
   ];
   const openResult = (row) => { setResultFor(row); setScores({ score1: row.score1 ?? '', score2: row.score2 ?? '' }); };
-  const openLive = (row) => { setLiveFor(row); setLiveForm({ is_live: true, score1: row.live_score1 ?? 0, score2: row.live_score2 ?? 0 }); };
+  const openLive = (row) => { setLiveFor(row); setLiveForm({ is_live: true, score1: row.live_score1 ?? 0, score2: row.live_score2 ?? 0, stream_url: row.stream_url || '' }); };
   const saveLive = async (e) => {
     e.preventDefault();
     try { const r = await api.put(`/admin/matches/${liveFor.id}/live`, liveForm); toast.success(r.message); setLiveFor(null); setRefreshKey((k) => k + 1); }
@@ -64,12 +64,13 @@ export default function AdminMatches() {
         <Modal title={liveFor.status === 'live' ? 'Update live match' : 'Go live'} onClose={() => setLiveFor(null)}>
           <form onSubmit={saveLive} className="space-y-4">
             <p className="text-sm text-slate-400">{liveFor.tournament} - {liveFor.stage}</p>
-            <label className="flex items-center gap-3 text-sm text-white"><input type="checkbox" className="h-4 w-4 accent-red-500" checked={liveForm.is_live} onChange={(e) => setLiveForm({ ...liveForm, is_live: e.target.checked })} /> This match is live now</label>
+            <label className="flex items-center gap-3 text-sm text-fg"><input type="checkbox" className="h-4 w-4 accent-red-500" checked={liveForm.is_live} onChange={(e) => setLiveForm({ ...liveForm, is_live: e.target.checked })} /> This match is live now</label>
+            <div><label className="label">Stream link (required to go live)</label><input type="url" required={liveForm.is_live} className="input" placeholder="https://www.youtube.com/watch?v=..." value={liveForm.stream_url || ''} onChange={(e) => setLiveForm({ ...liveForm, stream_url: e.target.value })} /></div>
             <div className="grid grid-cols-2 gap-4">
               <div><label className="label">{liveFor.team1}</label><input type="number" min="0" required className="input" value={liveForm.score1} onChange={(e) => setLiveForm({ ...liveForm, score1: e.target.value })} /></div>
               <div><label className="label">{liveFor.team2}</label><input type="number" min="0" required className="input" value={liveForm.score2} onChange={(e) => setLiveForm({ ...liveForm, score2: e.target.value })} /></div>
             </div>
-            <p className="text-xs text-slate-500">Viewers see this score on the Live Games page. Add or change the stream link with Edit. To finish the match, publish the final score with the Result button.</p>
+            <p className="text-xs text-slate-500">Viewers see this score on the Live Games page. The LIVE button appears only while a match is live with a stream link. To finish the match, publish the final score with the Result button.</p>
             <div className="flex justify-end gap-2"><button type="button" className="btn-ghost" onClick={() => setLiveFor(null)}>Cancel</button><button className="btn-primary">{liveForm.is_live ? 'Save live score' : 'Take off live list'}</button></div>
           </form>
         </Modal>

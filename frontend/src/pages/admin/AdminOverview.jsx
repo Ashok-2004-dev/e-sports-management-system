@@ -15,8 +15,8 @@ export default function AdminOverview() {
             {[[Users, 'Total players', s.players], [Shield, 'Total teams', s.teams], [Trophy, 'Total tournaments', s.tournaments],
               [Clock, 'Upcoming tournaments', s.upcoming], [Activity, 'Ongoing tournaments', s.ongoing], [CheckCircle2, 'Completed tournaments', s.completed]].map(([I, l, v]) => (
               <div key={l} className="card card-hover flex items-center gap-4 p-5">
-                <span className="rounded-xl bg-gradient-to-br from-brand/30 to-cyan-400/20 p-3 text-cyan-300 ring-1 ring-inset ring-white/10"><I size={24} /></span>
-                <div><p className="font-display text-3xl font-bold text-white">{v}</p><p className="text-sm text-slate-400">{l}</p></div>
+                <span className="rounded-xl bg-gradient-to-br from-brand/30 to-cyan-400/20 p-3 text-cyan-300 ring-1 ring-inset ring-fg/10"><I size={24} /></span>
+                <div><p className="font-display text-3xl font-bold text-fg">{v}</p><p className="text-sm text-slate-400">{l}</p></div>
               </div>))}
           </div>
           <RecentNotifications title="Latest changes" />

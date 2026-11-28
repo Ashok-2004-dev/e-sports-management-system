@@ -4,6 +4,7 @@ import { CATEGORIES, categoryLabel, gameImg, coverFor } from '../../services/cat
 const fields = [
   { name: 'name', label: 'Game name', required: true },
   { name: 'category', label: 'Category', type: 'select', required: true, default: 'other', options: CATEGORIES.map((c) => ({ value: c.value, label: c.label })) },
+  { name: 'team_size', label: 'Players per team (PUBG Mobile = 4)', type: 'number', required: true, default: 5 },
   { name: 'description', label: 'Description', type: 'textarea', full: true },
   { name: 'image_url', label: 'Game image / cover', type: 'image', full: true },
 ];
@@ -20,6 +21,7 @@ const columns = [
       </span>
     ),
   },
+  { key: 'team_size', label: 'Players per team' },
   { key: 'tournaments', label: 'Tournaments' },
 ];
 export default function AdminGames() {

@@ -49,7 +49,7 @@ export default function AuthShell({ children, tagline = 'Join the arena', subtit
               <span className={`mb-1 inline-block rounded-full border px-2.5 py-0.5 font-game text-[10px] font-semibold uppercase tracking-widest backdrop-blur-md ${cfg.badgeClass}`}>
                 {cfg.badge}
               </span>
-              <p className="font-game text-lg font-bold uppercase tracking-wider text-white">{tagline}</p>
+              <p className="font-game text-lg font-bold uppercase tracking-wider text-fg">{tagline}</p>
             </div>
           </div>
         </div>
@@ -58,7 +58,7 @@ export default function AuthShell({ children, tagline = 'Join the arena', subtit
       {/* Desktop showcase card */}
       <div className="relative hidden lg:block">
         <div className={`pointer-events-none absolute -inset-3 rounded-[2rem] bg-gradient-to-br ${cfg.glow} blur-2xl opacity-80`} />
-        <div className={`group relative overflow-hidden rounded-3xl border bg-[#12071f] shadow-2xl shadow-black/80 ${cfg.accent}`}>
+        <div className={`auth-art group relative overflow-hidden rounded-3xl border bg-ink-800 shadow-2xl shadow-black/80 ${cfg.accent}`}>
           <div className="relative h-[31rem] w-full overflow-hidden">
             <img
               src={cfg.image}
@@ -66,11 +66,11 @@ export default function AuthShell({ children, tagline = 'Join the arena', subtit
               className="h-full w-full object-cover object-center transition duration-700 ease-out group-hover:scale-105"
             />
             {/* Ambient purple & dark vignette blending */}
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_30%,rgba(8,9,12,0.75)_100%)]" />
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_30%,rgb(var(--ink-950)/0.75)_100%)]" />
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-ink-950 via-ink-950/35 to-fuchsia-950/15" />
 
             {/* Top HUD corner accents */}
-            <div className="pointer-events-none absolute left-5 top-5 flex items-center gap-2 rounded-full border border-white/10 bg-ink-950/70 px-3 py-1 text-[11px] font-semibold tracking-wider text-fuchsia-200/90 backdrop-blur-md">
+            <div className="pointer-events-none absolute left-5 top-5 flex items-center gap-2 rounded-full border border-fg/10 art-chip bg-ink-950/70 px-3 py-1 text-[11px] font-semibold tracking-wider text-fuchsia-200/90 backdrop-blur-md">
               <span className="h-2 w-2 rounded-full bg-fuchsia-400 shadow-[0_0_8px_#e879f9]" />
               ARENA CHAMPIONSHIP
             </div>
@@ -80,9 +80,9 @@ export default function AuthShell({ children, tagline = 'Join the arena', subtit
             <span className={`mb-2.5 inline-block rounded-full border px-3 py-0.5 font-game text-xs font-semibold uppercase tracking-widest backdrop-blur-md ${cfg.badgeClass}`}>
               {cfg.badge}
             </span>
-            <p className="font-game text-2xl font-bold uppercase tracking-wider text-white drop-shadow">{tagline}</p>
+            <p className="font-game text-2xl font-bold uppercase tracking-wider text-fg drop-shadow">{tagline}</p>
             {subtitle && <p className="mt-1 text-sm text-slate-300/90">{subtitle}</p>}
-            <div className="mt-3.5 flex flex-wrap items-center gap-4 border-t border-white/10 pt-3 text-sm text-slate-200">
+            <div className="mt-3.5 flex flex-wrap items-center gap-4 border-t border-fg/10 pt-3 text-sm text-slate-200">
               {cfg.highlights.map(({ icon: Icon, label, color }) => (
                 <span key={label} className="flex items-center gap-1.5 font-medium">
                   <Icon size={15} className={color} /> {label}

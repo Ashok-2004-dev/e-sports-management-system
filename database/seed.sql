@@ -30,6 +30,10 @@ INSERT INTO games (id,name,category,description) VALUES
 (4,'Free Fire','battle-royale','Quick 10-minute battle royale for mobile players.'),
 (5,'eFootball','sports','Football simulation played in head-to-head matches.');
 
+-- players allowed in one team, per game
+UPDATE games SET team_size=4 WHERE id IN (1,4);
+UPDATE games SET team_size=1 WHERE id=5;
+
 INSERT INTO teams (id,name,region,coach_name,captain_id,logo_url) VALUES
 (1,'Druk Dragons','Thimphu','Coach Lhendup',1,'/uploads/seed/team-1.svg'),
 (2,'Thunder Strikers','Paro','Coach Rinchen',3,'/uploads/seed/team-2.svg'),
@@ -37,6 +41,10 @@ INSERT INTO teams (id,name,region,coach_name,captain_id,logo_url) VALUES
 (4,'Snow Leopards','Bumthang','Coach Tshewang',7,'/uploads/seed/team-4.svg'),
 (5,'Black Neck Gaming','Wangdue Phodrang','Coach Dawa',9,'/uploads/seed/team-5.svg'),
 (6,'Eastern Tigers','Samdrup Jongkhar','Coach Phub',11,'/uploads/seed/team-6.svg');
+
+UPDATE teams SET game_id=1 WHERE id IN (1,2);
+UPDATE teams SET game_id=2 WHERE id IN (3,4);
+UPDATE teams SET game_id=3 WHERE id IN (5,6);
 
 INSERT INTO team_members (team_id,player_id,status) VALUES
 (1,1,'approved'),(1,2,'approved'),(2,3,'approved'),(2,4,'approved'),(3,5,'approved'),(3,6,'approved'),
@@ -62,11 +70,10 @@ INSERT INTO matches (id,tournament_id,team1_id,team2_id,stage,match_date) VALUES
 (11,3,3,6,'Group Stage',TIMESTAMP(DATE_ADD(CURDATE(), INTERVAL 3 DAY), '16:00:00')),(12,3,4,1,'Group Stage',TIMESTAMP(DATE_ADD(CURDATE(), INTERVAL 5 DAY), '17:30:00')),
 (13,3,5,3,'Group Stage',TIMESTAMP(DATE_ADD(CURDATE(), INTERVAL 8 DAY), '15:00:00'));
 
--- LIVE GAMES sample data: two matches that are being played right now (no result row, is_live = 1).
--- stream_url is left empty on purpose; add a YouTube/Twitch link from Admin > Matches > Edit to embed a real stream.
-INSERT INTO matches (id,tournament_id,team1_id,team2_id,stage,match_date,is_live,live_score1,live_score2) VALUES
-(14,3,2,4,'Group Stage',DATE_SUB(NOW(), INTERVAL 25 MINUTE),1,1,0),
-(15,3,6,1,'Group Stage',DATE_SUB(NOW(), INTERVAL 12 MINUTE),1,0,2);
+-- No match is live in the sample data: the LIVE button appears only after the admin presses "Go live".
+INSERT INTO matches (id,tournament_id,team1_id,team2_id,stage,match_date) VALUES
+(14,3,2,4,'Group Stage',TIMESTAMP(DATE_ADD(CURDATE(), INTERVAL 9 DAY), '15:00:00')),
+(15,3,6,1,'Group Stage',TIMESTAMP(DATE_ADD(CURDATE(), INTERVAL 10 DAY), '15:00:00'));
 
 INSERT INTO results (match_id,score1,score2,winner_id) VALUES
 (1,2,1,1),(2,0,2,4),(3,2,0,5),(4,1,2,4),(5,2,0,5),(6,1,2,5),(7,2,0,1),(8,2,1,2),(9,1,2,5);
