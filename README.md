@@ -2,6 +2,18 @@
 
 A web-based E-Sports Management System for organizing players, teams, tournaments, match schedules, results, notifications and live-match information.
 
+## Features
+
+- Player registration with email OTP, password reset, and Google / Facebook login
+- Join team requests, with a per-team player limit for each game
+- Tournament registration with pending, approved and rejected status
+- Leaderboard: top 10 teams or players, for one game or all games
+- LIVE section shown only while an admin has a match live with a stream link
+- Admin portal for games, players, teams, tournaments, registrations and matches
+- Notifications, and a dark / light theme
+
+See [CHANGES.md](CHANGES.md) for the latest modifications and how to set up Google and Facebook login.
+
 ## Technology
 
 | Part | Technology |
@@ -76,8 +88,12 @@ Edit `backend/.env` and enter your own MySQL connection values:
 - `JWT_SECRET`: a long, private random value
 - `ADMIN_PASSWORD`: a private initial administrator password of at least 9 characters
 - `CLIENT_URL`: frontend origin, normally `http://localhost:5173`
+- `SMTP_*`: needed to send OTP emails (for Gmail, use an App Password). If left blank during development, the code is printed in the backend terminal
+- `GOOGLE_CLIENT_ID`, `FACEBOOK_APP_ID`, `FACEBOOK_APP_SECRET`: needed for social login
 
-Do not use real credentials from another group member. Do not upload or commit `.env`, passwords, JWT secrets, SMTP credentials, or private certificates. If using hosted MySQL with SSL, obtain the CA certificate from your database provider and place it at the path configured in `DB_SSL_CA`.
+For social login, also copy `frontend/.env.example` to `frontend/.env` and fill in `VITE_GOOGLE_CLIENT_ID` and `VITE_FACEBOOK_APP_ID`.
+
+Do not use real credentials from another group member. Do not upload or commit `.env`, passwords, JWT secrets, SMTP credentials, or private keys. If using hosted MySQL with SSL, obtain the CA certificate from your database provider and place it at the path configured in `DB_SSL_CA`.
 
 ## 3. Set up the database
 
