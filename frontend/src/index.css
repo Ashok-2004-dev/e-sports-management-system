@@ -2,10 +2,33 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ---------- THEME COLOURS (RGB numbers) ----------
+   :root is the dark theme. html.light is the light theme. */
+:root {
+  --ink-950: 5 6 9; --ink-900: 9 10 15; --ink-800: 14 16 23; --ink-700: 22 25 35; --ink-600: 35 39 53;
+  --fg: 255 255 255; --slate-200: 226 232 240; --slate-300: 197 206 219; --slate-400: 148 163 184; --slate-500: 106 119 140; --slate-600: 71 85 105;
+  color-scheme: dark;
+}
+html.light {
+  --ink-950: 238 240 246; --ink-900: 247 248 252; --ink-800: 255 255 255; --ink-700: 232 235 243; --ink-600: 208 213 226;
+  --fg: 15 18 32; --slate-200: 30 41 59; --slate-300: 44 55 75; --slate-400: 71 85 105; --slate-500: 91 104 124; --slate-600: 148 163 184;
+  color-scheme: light;
+}
+
+/* bright accent text is hard to read on white, so darken it in light mode */
+html.light :is(.text-cyan-100, .text-cyan-300, .text-cyan-400) { color: #0e7490; }
+html.light :is(.text-brand-400, .text-violet-200, .text-violet-300, .text-violet-400) { color: #5b3fd6; }
+html.light :is(.text-fuchsia-200, .text-fuchsia-300, .text-fuchsia-400) { color: #a21caf; }
+html.light :is(.text-amber-200, .text-amber-300) { color: #a16207; }
+html.light :is(.text-emerald-300, .text-emerald-400) { color: #047857; }
+html.light :is(.text-blue-300) { color: #1d4ed8; }
+html.light :is(.text-red-200, .text-red-300, .text-red-400, .text-live-soft) { color: #be123c; }
+html.light .neon-text { background-image: linear-gradient(90deg, #0e7490, #5b3fd6 55%, #a21caf); }
+
 @layer base {
   html { scroll-behavior: smooth; } /* smooth scrolling for in-page jumps */
   body { @apply bg-ink-950 text-slate-300 font-sans antialiased; }
-  h1, h2, h3, h4 { @apply font-display tracking-wide text-white; }
+  h1, h2, h3, h4 { @apply font-display tracking-wide text-fg; }
   ::selection { background: rgba(34, 211, 238, .35); color: #fff; }
   /* keyboard focus is always visible */
   :focus-visible { outline: 2px solid #22d3ee; outline-offset: 2px; }
@@ -17,24 +40,25 @@
 
 @layer components {
   /* ---------- buttons ---------- */
-  .btn { @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed; }
+  .btn { @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded px-4 py-2 font-display text-[15px] font-bold uppercase tracking-wider transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed; }
   .btn-primary { @apply btn bg-gradient-to-r from-brand to-violet-700 text-white shadow-lg shadow-brand/25 hover:-translate-y-0.5 hover:brightness-110 hover:shadow-[0_8px_26px_rgba(124,92,255,.45)] active:translate-y-0; }
-  .btn-ghost { @apply btn border border-white/10 bg-white/[0.03] text-slate-200 hover:border-cyan-400/50 hover:bg-white/[0.07] hover:text-white; }
+  .btn-primary { clip-path: polygon(9px 0, 100% 0, 100% calc(100% - 9px), calc(100% - 9px) 100%, 0 100%, 0 9px); }
+  .btn-ghost { @apply btn border border-fg/10 bg-fg/[0.03] text-slate-200 hover:border-cyan-400/50 hover:bg-fg/[0.07] hover:text-fg; }
   .btn-danger { @apply btn bg-red-600/90 text-white hover:bg-red-600; }
 
   /* NEW: "Back" button used on every sub-page (see components/BackButton.jsx). 40px tall = comfortable tap target */
-  .btn-back { @apply inline-flex min-h-[40px] items-center gap-2 rounded-md border border-ink-600 bg-ink-900/60 px-3.5 py-1.5 text-sm font-semibold text-slate-300 transition duration-200 hover:border-cyan-400/60 hover:text-white hover:shadow-[0_0_14px_rgba(34,211,238,.2)]; }
+  .btn-back { @apply inline-flex min-h-[40px] items-center gap-2 rounded-md border border-ink-600 bg-ink-900/60 px-3.5 py-1.5 text-sm font-semibold text-slate-300 transition duration-200 hover:border-cyan-400/60 hover:text-fg hover:shadow-[0_0_14px_rgba(34,211,238,.2)]; }
 
   /* ---------- LIVE button + badge (NEW) ---------- */
   /* Outlined crimson button so the pulsing red dot stays visible against it. Used in the navbar, hero and dashboards. */
-  .btn-live { @apply relative inline-flex shrink-0 items-center gap-2 rounded-md border border-live/60 bg-live/10 px-3 py-1.5 text-sm font-bold text-white transition duration-200 hover:-translate-y-0.5 hover:border-live hover:bg-live/20; box-shadow: 0 0 0 0 rgba(255, 46, 77, 0); }
+  .btn-live { @apply relative inline-flex shrink-0 items-center gap-2 rounded-md border border-live/60 bg-live/10 px-3 py-1.5 text-sm font-bold text-fg transition duration-200 hover:-translate-y-0.5 hover:border-live hover:bg-live/20; box-shadow: 0 0 0 0 rgba(255, 46, 77, 0); }
   .btn-live:hover { box-shadow: 0 0 24px rgba(255, 46, 77, .5); }
   .btn-live-lg { @apply px-6 py-3 text-base; }
   .live-badge { @apply inline-flex items-center gap-1.5 rounded border border-live/40 bg-live/15 px-2 py-0.5 font-game text-[11px] font-bold leading-4 text-live-soft; letter-spacing: .16em; }
 
   /* ---------- panels ---------- */
   /* HUD style card: dark glass panel with glowing corner accents */
-  .card { @apply relative rounded-2xl border border-white/[0.07] bg-ink-800/70 backdrop-blur-sm; box-shadow: 0 10px 30px -14px rgba(0, 0, 0, .6), inset 0 1px 0 rgba(255, 255, 255, .05); }
+  .card { @apply relative rounded-lg border border-fg/[0.07] bg-ink-800/70 backdrop-blur-sm; box-shadow: 0 10px 30px -14px rgba(0, 0, 0, .6), inset 0 1px 0 rgba(255, 255, 255, .05); }
   .card-neon { @apply card border-cyan-400/25; box-shadow: 0 0 0 1px rgba(34, 211, 238, .06), 0 0 50px -16px rgba(34, 211, 238, .3), 0 24px 50px -24px rgba(0, 0, 0, .8); }
 
   /* NEW: hover glow + lift for match / tournament cards (cyan). .card-live is the crimson version for live matches. */
@@ -44,9 +68,9 @@
   .card-live.card-hover:hover { border-color: rgba(255, 46, 77, .8); box-shadow: 0 0 0 1px rgba(255, 46, 77, .3), 0 12px 44px -10px rgba(255, 46, 77, .45), 0 8px 30px -12px rgba(0, 0, 0, .7); }
   .card-selected { border-color: rgba(255, 46, 77, .9); box-shadow: 0 0 0 1px rgba(255, 46, 77, .4), 0 0 32px -6px rgba(255, 46, 77, .45); }
 
-  .input { @apply w-full rounded-lg border border-white/10 bg-ink-900/70 px-3.5 py-2.5 text-sm text-white placeholder-slate-500 transition focus:border-cyan-400 focus:outline-none focus:ring-4 focus:ring-cyan-400/10; }
+  .input { @apply w-full rounded-lg border border-fg/10 bg-ink-900/70 px-3.5 py-2.5 text-sm text-fg placeholder-slate-500 transition focus:border-cyan-400 focus:outline-none focus:ring-4 focus:ring-cyan-400/10; }
   .label { @apply mb-1.5 block text-xs font-semibold tracking-wide text-slate-400; }
-  .badge { @apply inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ring-1 ring-inset ring-white/10; }
+  .badge { @apply inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ring-1 ring-inset ring-fg/10; }
   .bg-grid { background-image: linear-gradient(rgba(34,211,238,.03) 1px, transparent 1px), linear-gradient(90deg, rgba(34,211,238,.03) 1px, transparent 1px); background-size: 44px 44px; }
   .neon-text { background: linear-gradient(90deg, #22d3ee, #7c5cff 55%, #c084fc); -webkit-background-clip: text; background-clip: text; color: transparent; }
   .hud-line { height: 2px; background: linear-gradient(90deg, transparent, #22d3ee, #7c5cff, transparent); }
@@ -67,7 +91,18 @@
 
 /* ---------- page backdrop (see components/GameBackdrop.jsx) ---------- */
 .gb-scanlines { position: absolute; inset: 0; background: none; mix-blend-mode: overlay; }
-.gb-noise-vignette { position: absolute; inset: 0; background: radial-gradient(ellipse at center, transparent 40%, rgba(8,9,12,.8) 100%); }
+.gb-noise-vignette { position: absolute; inset: 0; background: radial-gradient(ellipse at center, transparent 40%, rgb(var(--ink-950) / .8) 100%); }
+html.light .gb-art { display: none; }
+/* artwork is drawn dark, so fade it into the light page */
+html.light .hero-art { opacity: .12; }
+html.light .auth-art img { opacity: .55; }
+html.light .art-chip { color: #86198f; }
+html.light .auth-art span[class*='-950/'] { background: #fae8ff; color: #86198f; }
+html.light .toast { background: #fff; color: #0f1220; }
+
+/* every action button has the same height */
+.btn, .btn-live, .btn-back { min-height: 42px; }
+td .btn { min-height: 34px; }
 
 /* Accessibility: people who ask their device for less motion get no animation (content still appears) */
 @media (prefers-reduced-motion: reduce) {

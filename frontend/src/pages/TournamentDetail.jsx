@@ -9,6 +9,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { fmtDate, fmtNu } from '../services/format';
 import { tournamentImg } from '../services/categories.jsx';
+import useMyPlayer from '../hooks/useMyPlayer';
 
 export default function TournamentDetail() {
   const { id } = useParams();
@@ -16,10 +17,13 @@ export default function TournamentDetail() {
   const toast = useToast();
   const state = useFetch(`/tournaments/${id}`);
   const [busy, setBusy] = useState(false);
+  const me = useMyPlayer();
+  const reg = me.registrationFor(id);
+  const note = { pending: 'Waiting for the admin to approve it.', approved: 'You are in. Good luck!', rejected: 'The admin did not approve it.' };
 
   const register = async () => {
     setBusy(true);
-    try { const r = await api.post('/player/registrations', { tournament_id: id }); toast.success(r.message); state.reload(); }
+    try { const r = await api.post('/player/registrations', { tournament_id: id }); toast.success(r.message); state.reload(); me.reload(); }
     catch (e) { toast.error(e.message); } finally { setBusy(false); }
   };
 
@@ -40,8 +44,15 @@ export default function TournamentDetail() {
           </div>
           <p className="mt-3 flex items-center gap-2 text-sm text-slate-400"><Users size={16} /> {t.registrations} registered player(s)</p>
           <div className="mt-6">
-            {t.status !== 'upcoming' ? <p className="text-sm text-slate-400">Registration is closed for this tournament.</p>
-              : user?.role === 'player' ? <button className="btn-primary px-6 py-3" disabled={busy} onClick={register}>{busy ? 'Submitting...' : 'Register for this tournament'}</button>
+            {reg ? (
+                <div className="flex flex-wrap items-center gap-3 rounded-lg border border-ink-600 bg-ink-900/60 p-4" role="status">
+                  <span className="font-semibold text-fg">Your registration:</span>
+                  <StatusBadge status={reg.status} />
+                  <span className="text-sm text-slate-400">{note[reg.status]}</span>
+                  <Link to="/player/registrations" className="text-sm font-semibold text-brand-400">My registrations</Link>
+                </div>
+              ) : t.status !== 'upcoming' ? <p className="text-sm text-slate-400">Registration is closed for this tournament.</p>
+              : user?.role === 'player' ? <button className="btn-primary px-6 py-3" disabled={busy || !me.registrations} onClick={register}>{busy ? 'Submitting...' : 'Register for this tournament'}</button>
               : user?.role === 'admin' ? <p className="text-sm text-slate-400">Admins manage registrations from the admin dashboard.</p>
               : <Link to="/login" className="btn-primary px-6 py-3">Log in to register</Link>}
           </div>

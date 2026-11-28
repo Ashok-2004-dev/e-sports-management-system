@@ -4,11 +4,15 @@ import { Search, Users, MapPin } from 'lucide-react';
 import useFetch from '../hooks/useFetch';
 import { Async, PageHeader, Thumb } from '../components/ui';
 import useBase from '../hooks/useBase';
+import useMyPlayer from '../hooks/useMyPlayer';
+import JoinTeamButton from '../components/JoinTeamButton';
 
 export default function Teams() {
   const base = useBase();
   const [q, setQ] = useState('');
   const state = useFetch(`/teams?search=${encodeURIComponent(q)}`);
+  const me = useMyPlayer();
+  const done = () => { me.reload(); state.reload(); };
   return (
     <div>
       <PageHeader title="Teams" subtitle="Competing teams from across the country." />
@@ -17,12 +21,16 @@ export default function Teams() {
       <Async state={state} empty="No teams found.">{(d) => (
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {d.map((t) => (
-            <Link key={t.id} to={`${base}/teams/${t.id}`} className="card block p-5 transition hover:-translate-y-1 hover:border-brand/60">
-              <div className="mb-3"><Thumb src={t.logo_url} name={t.name} size={56} /></div>
-              <h3 className="text-2xl font-bold">{t.name}</h3>
-              <p className="mt-2 flex items-center gap-2 text-sm text-slate-400"><MapPin size={14} /> {t.region || 'Region not set'}</p>
-              <p className="mt-1 flex items-center gap-2 text-sm text-slate-400"><Users size={14} /> {t.members} member(s){t.captain ? ` - Captain ${t.captain}` : ''}</p>
-            </Link>
+            <div key={t.id} className="card card-hover flex flex-col p-5">
+              <Link to={`${base}/teams/${t.id}`} className="block flex-1">
+                <div className="mb-3"><Thumb src={t.logo_url} name={t.name} size={56} /></div>
+                <h3 className="text-2xl font-bold">{t.name}</h3>
+                <p className="text-xs font-semibold uppercase tracking-wider text-cyan-300">{t.game || 'Game not set'}</p>
+                <p className="mt-2 flex items-center gap-2 text-sm text-slate-400"><MapPin size={14} /> {t.region || 'Region not set'}</p>
+                <p className="mt-1 flex items-center gap-2 text-sm text-slate-400"><Users size={14} /> {t.members}{t.team_size ? ` / ${t.team_size}` : ''} player(s){t.captain ? ` - Captain ${t.captain}` : ''}</p>
+              </Link>
+              <JoinTeamButton team={t} mine={me.team} onDone={done} className="mt-4 w-full" />
+            </div>
           ))}
         </div>
       )}</Async>

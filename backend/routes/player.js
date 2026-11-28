@@ -19,9 +19,11 @@ router.post('/upload', require('../middleware/upload'));
 async function membership(playerId) {
   const [rows] = await db.query(
     `SELECT tm.team_id, tm.status AS member_status,
-            t.name, t.region, t.coach_name, t.captain_id, t.logo_url
+            t.name, t.region, t.coach_name, t.captain_id, t.logo_url,
+            t.game_id, g.name AS game, g.team_size
      FROM team_members tm
      JOIN teams t ON t.id = tm.team_id
+     LEFT JOIN games g ON g.id = t.game_id
      WHERE tm.player_id = ?`,
     [playerId]
   );
@@ -33,6 +35,24 @@ const phoneOk = (p) =>
   /^(?:\+?975)?(?:17|77)\d{6}$|^\+?[0-9]{7,15}$/.test(
     String(p || '').replace(/[\s-]/g, '')
   );
+
+// Team + its game's player limit. FOR UPDATE locks the team row so two
+// approvals at the same moment cannot push a team over the limit.
+async function teamWithSize(conn, teamId, lock) {
+  const [[t]] = await conn.query(
+    `SELECT id, name, captain_id, game_id FROM teams WHERE id = ?${lock ? ' FOR UPDATE' : ''}`,
+    [teamId]
+  );
+  if (!t) return null;
+  const [[g]] = await conn.query('SELECT name, team_size FROM games WHERE id = ?', [t.game_id]);
+  const [[c]] = await conn.query(
+    "SELECT COUNT(*) AS n FROM team_members WHERE team_id = ? AND status = 'approved'",
+    [teamId]
+  );
+  return { ...t, game: g?.name, team_size: g?.team_size, members: Number(c.n) };
+}
+
+const fullMessage = (t) => `${t.name} is full: ${t.game} allows only ${t.team_size} player(s) per team.`;
 
 // ---------------- PROFILE ----------------
 
@@ -143,9 +163,10 @@ router.post('/registrations', wrap(async (req, res) => {
   const { tournament_id } = req.body;
 
   const [[t]] = await db.query(
-    `SELECT title, status,
-            registration_deadline >= CURDATE() AS is_open
-     FROM tournaments WHERE id = ?`,
+    `SELECT t.title, t.status, t.game_id, g.name AS game, g.team_size,
+            t.registration_deadline >= CURDATE() AS is_open
+     FROM tournaments t JOIN games g ON g.id = t.game_id
+     WHERE t.id = ?`,
     [tournament_id]
   );
 
@@ -158,8 +179,27 @@ router.post('/registrations', wrap(async (req, res) => {
 
   const mem = await membership(req.playerId);
 
-  const teamId =
-    mem && mem.member_status === 'approved' ? mem.team_id : null;
+  const inTeam = mem && mem.member_status === 'approved' && mem.game_id === t.game_id;
+
+  // team games need a team for the same game; solo games (team size 1) do not
+  need(
+    inTeam || t.team_size === 1,
+    `Join or create a ${t.game} team before registering.`
+  );
+
+  const teamId = inTeam ? mem.team_id : null;
+
+  if (teamId) {
+    const [[used]] = await db.query(
+      `SELECT COUNT(*) AS n FROM registrations
+       WHERE tournament_id = ? AND team_id = ? AND status <> 'rejected'`,
+      [tournament_id, teamId]
+    );
+    need(
+      Number(used.n) < t.team_size,
+      `Your team already has ${t.team_size} player(s) registered, the limit for ${t.game}.`
+    );
+  }
 
   await db.query(
     `INSERT INTO registrations
@@ -252,7 +292,10 @@ router.get('/team', wrap(async (req, res) => {
       name: mem.name,
       region: mem.region,
       coach_name: mem.coach_name,
-      logo_url: mem.logo_url
+      logo_url: mem.logo_url,
+      game_id: mem.game_id,
+      game: mem.game,
+      team_size: mem.team_size
     },
     status: mem.member_status,
     isCaptain: mem.captain_id === req.playerId,
@@ -264,12 +307,15 @@ router.get('/team', wrap(async (req, res) => {
 // ---------------- CREATE TEAM ----------------
 
 router.post('/teams', wrap(async (req, res) => {
-  const { name, region, coach_name } = req.body;
+  const { name, region, coach_name, game_id } = req.body;
 
   need(
     name && name.trim().length >= 3,
     'Team name must be at least 3 characters.'
   );
+
+  const [[game]] = await db.query('SELECT id FROM games WHERE id = ?', [game_id || 0]);
+  need(game, 'Choose the game this team plays.');
 
   need(
     !(await membership(req.playerId)),
@@ -283,9 +329,9 @@ router.post('/teams', wrap(async (req, res) => {
 
     const [t] = await conn.query(
       `INSERT INTO teams
-       (name, region, coach_name, captain_id)
-       VALUES (?, ?, ?, ?)`,
-      [name.trim(), nn(region), nn(coach_name), req.playerId]
+       (name, region, coach_name, captain_id, game_id)
+       VALUES (?, ?, ?, ?, ?)`,
+      [name.trim(), nn(region), nn(coach_name), req.playerId, game.id]
     );
 
     // Add the creator as the approved team captain.
@@ -333,12 +379,11 @@ router.post('/teams/:id/join', wrap(async (req, res) => {
     'You already belong to a team or have a pending request.'
   );
 
-  const [[t]] = await db.query(
-    'SELECT id, name, captain_id FROM teams WHERE id = ?',
-    [req.params.id]
-  );
+  const t = await teamWithSize(db, req.params.id);
 
   if (!t) throw new HttpError(404, 'Team not found.');
+
+  need(!t.team_size || t.members < t.team_size, fullMessage(t));
 
   await db.query(
     `INSERT INTO team_members
@@ -386,12 +431,24 @@ router.put('/team/requests/:playerId', wrap(async (req, res) => {
   let result;
 
   if (action === 'approve') {
-    [result] = await db.query(
-      `UPDATE team_members
-       SET status = ?
-       WHERE team_id = ? AND player_id = ? AND status = ?`,
-      ['approved', mem.team_id, req.params.playerId, 'pending']
-    );
+    const conn = await db.getConnection();
+    try {
+      await conn.beginTransaction();
+      const team = await teamWithSize(conn, mem.team_id, true);
+      need(!team.team_size || team.members < team.team_size, fullMessage(team));
+      [result] = await conn.query(
+        `UPDATE team_members
+         SET status = ?
+         WHERE team_id = ? AND player_id = ? AND status = ?`,
+        ['approved', mem.team_id, req.params.playerId, 'pending']
+      );
+      await conn.commit();
+    } catch (e) {
+      await conn.rollback();
+      throw e;
+    } finally {
+      conn.release();
+    }
   } else {
     [result] = await db.query(
       `DELETE FROM team_members
@@ -420,6 +477,28 @@ router.put('/team/requests/:playerId', wrap(async (req, res) => {
       ? 'Player added to your team.'
       : 'Request rejected.'
   });
+}));
+
+// ---------------- SET TEAM GAME (captain) ----------------
+
+router.put('/team/game', wrap(async (req, res) => {
+  const mem = await membership(req.playerId);
+
+  need(mem && mem.captain_id === req.playerId, 'Only the team captain can do this.');
+  need(!mem.game_id, 'This team already has a game. Ask the administrator to change it.');
+
+  const [[game]] = await db.query('SELECT id, name, team_size FROM games WHERE id = ?', [req.body.game_id || 0]);
+  need(game, 'Choose a game.');
+
+  const t = await teamWithSize(db, mem.team_id);
+  need(
+    t.members <= game.team_size,
+    `${game.name} allows only ${game.team_size} player(s), but your team has ${t.members}.`
+  );
+
+  await db.query('UPDATE teams SET game_id = ? WHERE id = ?', [game.id, mem.team_id]);
+
+  res.json({ message: `Your team now plays ${game.name}.` });
 }));
 
 // ---------------- LEAVE TEAM ----------------

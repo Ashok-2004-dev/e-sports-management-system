@@ -33,7 +33,7 @@ export const ErrorBox = ({ text }) => <div className="rounded-lg border border-r
 export const Empty = ({ text = 'Nothing to show yet.', title = 'Nothing here yet', action }) => (
   <div className="card flex flex-col items-center gap-2 border-dashed p-10 text-center">
     <span className="rounded-full bg-ink-700 p-3 text-slate-400"><Inbox size={26} /></span>
-    <p className="font-display text-xl font-bold text-white">{title}</p>
+    <p className="font-display text-xl font-bold text-fg">{title}</p>
     <p className="max-w-md text-sm text-slate-400">{text}</p>
     {action}
   </div>
@@ -56,7 +56,7 @@ export function Modal({ title, onClose, children }) {
       <div className="card animate-fadeUp my-8 w-full max-w-xl p-6">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-xl font-bold">{title}</h3>
-          <button onClick={onClose} className="rounded p-1 text-slate-400 hover:bg-ink-700 hover:text-white"><X size={20} /></button>
+          <button onClick={onClose} className="rounded p-1 text-slate-400 hover:bg-ink-700 hover:text-fg"><X size={20} /></button>
         </div>
         {children}
       </div>

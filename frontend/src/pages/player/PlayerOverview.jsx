@@ -15,9 +15,9 @@ export default function PlayerOverview() {
       <Async state={state}>{(d) => (
         <div className="space-y-8">
           <div className="grid gap-4 sm:grid-cols-3">
-            <div className="card card-hover p-5"><ClipboardList className="mb-2 text-brand-400" /><p className="font-display text-3xl font-bold text-white">{d.registrations}</p><p className="text-sm text-slate-400">Tournament registrations</p></div>
-            <div className="card card-hover p-5"><Shield className="mb-2 text-violet-400" /><p className="font-display text-2xl font-bold text-white">{d.team || 'No team yet'}</p><p className="text-sm text-slate-400">My team</p></div>
-            <div className="card card-hover p-5"><Swords className="mb-2 text-emerald-400" /><p className="font-display text-3xl font-bold text-white">{d.nextMatches.length}</p><p className="text-sm text-slate-400">Upcoming team matches</p></div>
+            <div className="card card-hover p-5"><ClipboardList className="mb-2 text-brand-400" /><p className="font-display text-3xl font-bold text-fg">{d.registrations}</p><p className="text-sm text-slate-400">Tournament registrations</p></div>
+            <div className="card card-hover p-5"><Shield className="mb-2 text-violet-400" /><p className="font-display text-2xl font-bold text-fg">{d.team || 'No team yet'}</p><p className="text-sm text-slate-400">My team</p></div>
+            <div className="card card-hover p-5"><Swords className="mb-2 text-emerald-400" /><p className="font-display text-3xl font-bold text-fg">{d.nextMatches.length}</p><p className="text-sm text-slate-400">Upcoming team matches</p></div>
           </div>
           <div className="flex flex-wrap gap-3">
             <Link to="/player/tournaments" className="btn-primary">Browse tournaments</Link>

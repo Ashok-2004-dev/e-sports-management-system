@@ -30,7 +30,9 @@ CREATE TABLE IF NOT EXISTS games (
   name VARCHAR(80) NOT NULL UNIQUE,
   category VARCHAR(30) NOT NULL DEFAULT 'other',
   description TEXT,
-  image_url VARCHAR(500) NULL
+  image_url VARCHAR(500) NULL,
+  -- how many players one team may have for this game (PUBG Mobile = 4)
+  team_size INT NOT NULL DEFAULT 5
 );
 
 CREATE TABLE IF NOT EXISTS teams (
@@ -40,7 +42,9 @@ CREATE TABLE IF NOT EXISTS teams (
   coach_name VARCHAR(100),
   logo_url VARCHAR(500) NULL,
   captain_id INT NULL,
+  game_id INT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (game_id) REFERENCES games(id) ON DELETE SET NULL,
   FOREIGN KEY (captain_id) REFERENCES players(id) ON DELETE SET NULL
 );
 

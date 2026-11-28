@@ -261,6 +261,12 @@ router.post('/social', wrap(async (req, res) => {
   if (provider === 'google') {
     need(credential, 'Missing Google credential token.');
 
+    if (!process.env.GOOGLE_CLIENT_ID) {
+      return res.status(500).json({
+        message: 'Google login is not set up: add GOOGLE_CLIENT_ID to backend/.env.'
+      });
+    }
+
     const gRes = await fetch(
       `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(credential)}`
     );
@@ -273,9 +279,15 @@ router.post('/social', wrap(async (req, res) => {
       });
     }
 
-    if (process.env.GOOGLE_CLIENT_ID && payload.aud !== process.env.GOOGLE_CLIENT_ID) {
+    if (payload.aud !== process.env.GOOGLE_CLIENT_ID) {
       return res.status(401).json({
         message: 'Google Client ID mismatch.'
+      });
+    }
+
+    if (String(payload.email_verified) !== 'true') {
+      return res.status(401).json({
+        message: 'Your Google email address is not verified.'
       });
     }
 
@@ -286,6 +298,26 @@ router.post('/social', wrap(async (req, res) => {
 
   } else {
     need(accessToken, 'Missing Facebook access token.');
+
+    const { FACEBOOK_APP_ID: appId, FACEBOOK_APP_SECRET: appSecret } = process.env;
+
+    if (!appId || !appSecret) {
+      return res.status(500).json({
+        message: 'Facebook login is not set up: add FACEBOOK_APP_ID and FACEBOOK_APP_SECRET to backend/.env.'
+      });
+    }
+
+    const checkRes = await fetch(
+      `https://graph.facebook.com/debug_token?input_token=${encodeURIComponent(accessToken)}&access_token=${encodeURIComponent(`${appId}|${appSecret}`)}`
+    );
+
+    const check = await checkRes.json();
+
+    if (!check.data?.is_valid || String(check.data.app_id) !== appId) {
+      return res.status(401).json({
+        message: 'Invalid or expired Facebook token.'
+      });
+    }
 
     const fbRes = await fetch(
       `https://graph.facebook.com/me?fields=id,name,email,picture.type(large)&access_token=${encodeURIComponent(accessToken)}`
@@ -507,7 +539,7 @@ router.post('/login', wrap(async (req, res) => {
   }
 
   if (!u.password_hash) {
-    const prov = u.auth_provider === 'facebook' ? 'Facebook' : 'Gmail';
+    const prov = u.auth_provider === 'facebook' ? 'Facebook' : 'Google';
 
     return res.status(401).json({
       message: `This account uses ${prov} login. Click "Continue with ${prov}" below.`
@@ -593,18 +625,13 @@ router.post('/forgot-password', wrap(async (req, res) => {
         'Your E-Sports MS password reset code',
         `Hello ${u.name},\n\nYour password reset code is ${code}\nIt expires in 15 minutes. If you did not ask for this, ignore this message.`
       );
-
-      if (!process.env.SMTP_HOST) {
-        return res.json({
-          message: `Reset code generated (Local Dev Mode): ${code}`,
-          devCode: code
-        });
-      }
     }
   }
 
   res.json({
-    message: 'If that account exists, a 6-digit reset code has been sent to its email address.'
+    message: process.env.SMTP_HOST
+      ? 'If that account exists, a 6-digit reset code has been sent to its email address.'
+      : 'Email is off (dev mode). If that account exists, the reset code is printed in the backend terminal.'
   });
 }));
 

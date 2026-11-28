@@ -21,7 +21,7 @@ function StreamStage({ m }) {
   const art = gameArt(m.game) || coverFor('other');
   return (
     <div className={`card overflow-hidden ${ended ? '' : 'card-live'}`}>
-      <div className="relative aspect-video bg-black">
+      <div className="relative aspect-video bg-ink-900">
         {s?.src && !ended ? (
           // key={s.src} reloads the player when the viewer switches match
           <iframe key={s.src} src={s.src} title={`${m.team1} vs ${m.team2} live stream`} className="absolute inset-0 h-full w-full border-0"
@@ -55,8 +55,8 @@ function TeamLine({ name, logo, score, win }) {
   return (
     <div className={`flex items-center gap-3 rounded-lg border px-3 py-3 ${win ? 'border-cyan-400/40 bg-cyan-400/5' : 'border-ink-600 bg-ink-900/60'}`}>
       <Thumb src={logo} name={name} size={44} />
-      <span className="min-w-0 flex-1 truncate font-display text-xl font-bold text-white">{name}</span>
-      <span key={score} className="animate-pop font-display text-4xl font-bold tabular-nums text-white">{score}</span>
+      <span className="min-w-0 flex-1 truncate font-display text-xl font-bold text-fg">{name}</span>
+      <span key={score} className="animate-pop font-display text-4xl font-bold tabular-nums text-fg">{score}</span>
     </div>
   );
 }
@@ -75,7 +75,7 @@ function Scoreboard({ m }) {
     <div className="card flex h-full flex-col gap-4 p-5">
       <div>
         <div className="mb-2 flex flex-wrap items-center gap-2">{ended ? <span className="badge bg-slate-500/20 text-slate-300">Final</span> : <LiveBadge />}{since && <span className="text-xs text-slate-400">{since}</span>}</div>
-        <Link to={`/tournaments/${m.tournament_id}`} className="flex items-center gap-2 font-game text-lg font-bold leading-tight text-white transition hover:text-cyan-300"><Trophy size={16} className="shrink-0 text-amber-300" /> {m.tournament}</Link>
+        <Link to={`/tournaments/${m.tournament_id}`} className="flex items-center gap-2 font-game text-lg font-bold leading-tight text-fg transition hover:text-cyan-300"><Trophy size={16} className="shrink-0 text-amber-300" /> {m.tournament}</Link>
         <p className="mt-1 text-sm text-slate-400">{m.game}, {m.stage}</p>
         <p className="text-xs text-slate-500">Started {fmtDateTime(m.match_date)}</p>
       </div>

@@ -55,7 +55,7 @@ export default function ArenaBootScreen() {
   return (
     <div
       aria-hidden="true"
-      className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden bg-[#06070a] transition-all duration-500 ${
+      className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden bg-ink-950 transition-all duration-500 ${
         closing ? 'pointer-events-none scale-105 opacity-0' : 'opacity-100'
       }`}
     >
@@ -98,7 +98,7 @@ export default function ArenaBootScreen() {
           </svg>
           {/* Core Hexagonal / Gaming Badge */}
           <div className="relative flex h-20 w-20 items-center justify-center rounded-2xl border border-cyan-400/50 bg-gradient-to-br from-cyan-500/20 via-brand/30 to-ink-900 shadow-[0_0_40px_rgba(34,211,238,0.4)]">
-            <Gamepad2 size={38} className="text-white drop-shadow-[0_0_12px_rgba(34,211,238,0.9)]" />
+            <Gamepad2 size={38} className="text-fg drop-shadow-[0_0_12px_rgba(34,211,238,0.9)]" />
           </div>
         </div>
 
@@ -106,7 +106,7 @@ export default function ArenaBootScreen() {
         <p className="mb-1 font-game text-xs font-bold uppercase tracking-[0.35em] text-cyan-400">
           COMPETITIVE ARENA PLATFORM
         </p>
-        <h1 className="font-game text-4xl font-bold uppercase tracking-[0.14em] text-white sm:text-5xl">
+        <h1 className="font-game text-4xl font-bold uppercase tracking-[0.14em] text-fg sm:text-5xl">
           E-SPORTS <span className="neon-text">MS</span>
         </h1>
 

@@ -64,7 +64,12 @@ router.get('/matches/:id', wrap(async (req, res) => {
   res.json(rows[0]);
 }));
 
-router.get('/leaderboard/teams', wrap(async (req, res) => { const [r] = await db.query(Q.TEAM_BOARD); res.json(r); }));
-router.get('/leaderboard/players', wrap(async (req, res) => { const [r] = await db.query(Q.PLAYER_BOARD); res.json(r); }));
+const board = (build) => wrap(async (req, res) => {
+  const q = build(parseInt(req.query.game_id, 10) || null);
+  const [rows] = await db.query(q.sql, q.params);
+  res.json(rows);
+});
+router.get('/leaderboard/teams', board(Q.teamBoard));
+router.get('/leaderboard/players', board(Q.playerBoard));
 
 module.exports = router;

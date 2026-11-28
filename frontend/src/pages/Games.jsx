@@ -22,7 +22,7 @@ export default function Games() {
           <img src="/images/covers/other.jpg" alt="All categories" className="absolute inset-0 h-full w-full object-cover opacity-55 transition duration-500 group-hover:scale-110" />
           <div className="absolute inset-0 bg-gradient-to-t from-ink-950 via-ink-950/55 to-transparent" />
           <div className="relative flex h-full flex-col justify-end p-3">
-            <span className="font-game text-sm font-bold uppercase tracking-wider text-white">All Games</span>
+            <span className="font-game text-sm font-bold uppercase tracking-wider text-fg">All Games</span>
           </div>
         </button>
         {CATEGORIES.map((c) => {
@@ -37,7 +37,7 @@ export default function Games() {
               <img src={coverFor(c.value)} alt={c.label} className="absolute inset-0 h-full w-full object-cover opacity-70 transition duration-500 group-hover:scale-110" />
               <div className="absolute inset-0 bg-gradient-to-t from-ink-950 via-ink-950/50 to-transparent" />
               <div className="relative flex h-full flex-col justify-end p-3">
-                <span className="flex items-center gap-1.5 font-game text-sm font-bold uppercase tracking-wider text-white">
+                <span className="flex items-center gap-1.5 font-game text-sm font-bold uppercase tracking-wider text-fg">
                   <Icon size={14} className="text-brand-400" /> {c.label}
                 </span>
               </div>

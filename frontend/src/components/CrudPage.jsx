@@ -54,12 +54,12 @@ export default function CrudPage({ title, subtitle, endpoint, columns, fields, c
       {!rows ? <Loading /> : !rows.length ? <Empty title={q ? 'No results' : 'No records yet'} text={q ? 'Nothing matches your search.' : emptyText} /> : (
         <div className="card overflow-x-auto overflow-y-hidden">
           <table className="w-full text-left text-sm">
-            <thead className="border-b border-white/[0.06] bg-white/[0.03] text-xs font-semibold uppercase tracking-wider text-slate-400">
+            <thead className="border-b border-fg/[0.06] bg-fg/[0.03] text-xs font-semibold uppercase tracking-wider text-slate-400">
               <tr>{columns.map((c) => <th key={c.key} className="px-4 py-3">{c.label}</th>)}<th className="px-4 py-3 text-right">Actions</th></tr>
             </thead>
             <tbody>
               {rows.map((row) => (
-                <tr key={row.id} className="border-b border-white/[0.05] transition last:border-0 hover:bg-white/[0.04]">
+                <tr key={row.id} className="border-b border-fg/[0.05] transition last:border-0 hover:bg-fg/[0.04]">
                   {columns.map((c) => <td key={c.key} className="px-4 py-3">{c.render ? c.render(row) : row[c.key] ?? '-'}</td>)}
                   <td className="whitespace-nowrap px-4 py-3 text-right">
                     <div className="flex justify-end gap-1">

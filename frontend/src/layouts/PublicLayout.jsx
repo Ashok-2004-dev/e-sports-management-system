@@ -20,7 +20,7 @@ export default function PublicLayout() {
             Top-level pages (/live, /teams ...) go straight to Home; detail pages (/live/3, /teams/3) go to the previous screen. */}
         {!wide && (
           <div className="mb-5">
-            {depth <= 1 ? <BackButton to="/" label="Back to Home" /> : <BackButton fallback={`/${pathname.split('/')[1]}`} label="Back" />}
+            <BackButton fallback={depth <= 1 ? '/' : `/${pathname.split('/')[1]}`} />
           </div>
         )}
         {/* NEW: page transition. Keying by pathname re-mounts this wrapper on navigation, which replays the fade-in. */}
